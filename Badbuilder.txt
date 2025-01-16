@@ -1,0 +1,148 @@
+"""
+Bad Builders by LinktersHD
+
+/badbuilder <player> [reason] Disables a person from building
+/bb <player> <reason> Disables a person from building
+/free <player> Lets a player build again
+/freebb <player> Lets a player build again
+/badbuilders [player] checks if a player is a bad builder. If no arguments are entered, it lists all bad builders players.
+/bblist [player] checks if a player is a bad builder. If no arguments are entered, it lists all bad builders players.
+/freeall WOOT, FREES EVERYONE WHO WAS A BAD BUILDER!
+"""
+
+from commands import add, admin, get_player, join_arguments, name, alias
+from pyspades.common import to_coordinates, coordinates
+from pyspades.constants import *
+
+badbuilders_location = 0, 0, 0 # Ignore them, Not very usefull
+badbuilders_coords   = ["B4"] # Ignore them
+
+class Banleave(object): #IGNORE this, It will be used for a later update
+    duration = 120.0 # 2 minutes
+    interval = 2 * 60.0 # 3 minutes
+    ban_duration = 15.0
+    public_votes = True
+    schedule = None
+
+badbuilders_list = []
+
+@name('badbuilder') # Long command to set a bad builder
+@alias('bb') # Lets you use a shorter command
+@admin
+def setbadbuilder_player(connection, value = None, *args):
+    protocol = connection.protocol
+    player = get_player(protocol, value)
+    reason = join_arguments(args[0:])
+    if player not in protocol.players:
+        raise ValueError() # If player doesn't exist, raise error
+    else:
+        if player.badbuilder:
+            return 'Player ' + player.name + ' is already a badbuilder'
+        elif not player.badbuilder:
+            player.badbuilder = True
+            player.reason = reason
+            player.squad  = None
+            player.squad_pref = None
+            connection.protocol.send_chat("%s is a bad builder by for : %s" % (player.name, reason)) # Message
+            connection.protocol.irc_say("* %s set %s as a bad builder for reason: %s" % (connection.name, player.name, reason)) # Message
+            badbuilders_	.append(player.name)
+add(setbadbuilder_player)
+
+@name('badbuilders')
+@alias('bblist')
+def is_badbuilder(connection, value = None):
+    if value is None:
+        if not badbuilders_list:
+            return 'There are no bad builder(s)'
+        else:
+            return "Bad builders are: " + ", ".join(badbuilders_list)
+    elif value is not None:
+        protocol = connection.protocol
+        player = get_player(protocol, value)
+        if player not in protocol.players:
+            raise ValueError()
+        else:
+            if player.badbuilder:
+                return 'Player %s is a bad builder for: %s' % (player.name, player.reason)
+            else:
+                return 'Player %s is not a bad builder' % (player.name)
+add(is_badbuilder) # Adds "def is_badbuilder"
+
+@name('free')
+@alias('freebb') # Lets you use a shorter command
+@admin
+def free_from_badbuilder(connection, value):
+    protocol = connection.protocol
+    player = get_player(protocol, value)
+    if player not in protocol.players:
+        raise ValueError()
+    else:
+        if not player.badbuilder:
+            return 'Player ' + player.name + ' is not a bad builder'
+        elif player.badbuilder:
+            player.badbuilder = False
+            connection.protocol.send_chat("%s is allowed to build again. Freed from %s" % (player.name, connection.name))
+            connection.protocol.irc_say('* %s was allowed to be build again. Freed from %s' % (player.name, connection.name))
+            badbuilders_list.remove(player.name)
+add(free_from_badbuilder)
+
+@name('freeall')
+@alias('freeallbb') # Lets you use a shorter command
+@admin
+def free_all(connection):
+    protocol = connection.protocol
+    for playersbadbuilder in badbuilders_list:
+        player = get_player(protocol, playersbadbuilder)
+        player.badbuilder = False
+        player.reason = None
+        badbuilders_list.remove(playersbadbuilder)
+    return 'All players who were not allowed to build are allowed to build now'
+
+add(free_all)
+
+class Badboy(object):
+    duration = 120.0 # 2 minutes
+    interval = 2 * 60.0 # 3 minutes
+    ban_duration = 15.0
+    public_votes = True
+    schedule = None
+
+def apply_script(protocol, connection, config):
+    class BuilderConnection(connection):
+        badbuilder = False 
+        def on_block_build_attempt(self, x, y, z):
+            x, y, z = self.get_location()
+            coord = to_coordinates(x, y)
+            if self.badbuilder:
+                self.send_chat("You can't build when you're a bad builder! You were set as a bad builder for %s" % (self.reason))
+                return False
+            elif coord in badbuilders_coords and not self.user_types.admin:
+                self.send_chat("You can't build because you are a bad builder, %s!" % self.name)
+                return False
+            return connection.on_block_build_attempt(self, x, y, z)
+        def on_block_destroy(self, x, y, z, mode):
+            x, y, z = self.get_location()
+            coord = to_coordinates(x, y)
+            if self.badbuilder:
+                self.send_chat("You can't destroy blocks when you're a bad builder! You are a bad builder for: %s" % (self.reason))
+                return False
+            elif coord in badbuilders_coords and not self.user_types.admin:
+                self.send_chat("Stop trying to destroy buildings, %s!" % self.name)
+                return False
+            return connection.on_block_destroy(self, x, y, z, mode)
+        def on_line_build_attempt(self, points):
+            x, y, z = self.get_location()
+            coord = to_coordinates(x, y)
+            if self.badbuilder:
+                self.send_chat("You can't build when you're a bad builder! You're not allowed to build for: %s" % (self.reason))
+                return False
+            elif coord in badbuilders_coords and not self.user_types.admin:
+                self.send_chat("You can't build, %s!" % self.name)
+                return False
+            return connection.on_line_build_attempt(self, points)
+        def on_disconnect(self):
+            if self.badbuilder:
+                badbuilders_list.remove(self.name)
+                self.badbuilder = False
+            return connection.on_disconnect(self)
+    return protocol, BuilderConnection
