@@ -1,0 +1,57 @@
+trollscriptplus
+originaly an script by me and leif_the_head
+this can be considered as badmin toy to screw around with players
+i wrote it to annoy hackers since baning them is no fun at all and the life of an admin can be quite boring
+it features many commands:
+/burn <name> [damage] [duration] : damages a player over a set amount of time
+- may crash the server if you enter way too high values
+
+/launch <name> height : launches a player in the air --- not working anymore
+
+/hold <name> [time] [height] : holds a player up in the air rendering him immobile for a set amount of time, expect the target to ask what is going on
+- will also crash the serv if you hold a billion players up for a trillion years
+
+/troll <name> : launches a player 40000 blocks up (dont ask me why), this will be a flight of roughly 15 minutes
+-migh crash voxlap clients if you are lucky
+
+/getout <name> [x, y, z] : moves your target out of the map leading to a crash of voxlap clients
+- will cause an error, but still work
+
+/flash <name> [seconds] : will give the player a seizure
+- the skies color wont revert back after that
+
+/nospawn <name> : the target may never respawn again
+- irreversible
+
+/repeldamage <name> : the player will receive the damage he deals ,
+it took a hacker once 53 self-kills to realize it (but yeah what else do you expect from a 12 years old)
+
+/damagemultiplicator <name> <value> this never existed, okay?
+
+/confuse <name> [time] : teleports the target randomly across the map
+
+/noammo <name> : removes the players ammo everytime he makes a move, i think this is a fair deal for aimboters
+
+/spam <name> <repititions> <interval> <message you want to tell him several times> : i guess this is self-explainatory
+
+/leave <name> : it appears for the target like everyone else left the server, they turn invisible for him
+-irreversible
+
+/nirvana <name> : your client will think it disconnected from the server, this will just mess you up so hard that you have to reconnect
+
+/nag <name> <time> : tries to box in the target, the blocks are only visible to him so it can be quite amusing to see him dancing around like mad
+
+/prison <name> : locks the player up in the prison (the pink cube the script creates in the centre of the map), the player is rendered useless that way, there was once a script like that before but i never found it so i just wrote something like that on my own
+
+/buildprison : in case the prison has been destroyed it will be rebuilt
+-it will be only visible after reconnecting though
+
+/namechange <name> <new name> : changes the players name
+- it will be only visible for those who connect after that
+
+/msessagechange <name> <new message> : whenever the target is writing something it will be changed to whatever you specify
+
+/cocaine <name> : the player will teleport to the place he is looking at everytime he moves his mouse
+-it will likely teleport him outa the map which will either crash him, of if he has the intel the entire server while he is at it
+
+/stc : shows all available commands
