@@ -1,0 +1,70 @@
+name = "snow trees"
+author = "T0M"
+description = "random map"
+
+fog = (255,255,255)
+extensions = {
+	"water_damage" : 100
+}
+
+LAND_SIZE_X = 512
+LAND_SIZE_Y = 192
+WALL_COLOR = (255,0,0)
+
+def gen_script(basename,seed):
+	from pyspades import vxl
+	import random
+	from math import hypot,sqrt
+	map = vxl.VXLData()
+
+	#water
+	for s in range(512):
+		for t in range(512):
+			map.set_point(s,t,63,(0,0,0))
+	#land
+	lx = LAND_SIZE_X
+	ly = LAND_SIZE_Y
+	for s in range((512-lx)/2,(512-lx)/2+lx):
+		for t in range((512-ly)/2,(512-ly)/2+ly):
+			map.set_point(s,t,62,(255,255,255))
+	for x in range(512):
+		for z in range(63):
+			map.set_point(x,(512-ly)/2-1,z,WALL_COLOR)
+			map.set_point(x,(512-ly)/2+ly+1,z,WALL_COLOR)
+
+	for s in range(int(sqrt(lx*ly))):
+		t = random.randrange((512-lx)/2+8,(512-lx)/2+lx-32)
+		u = random.randrange((512-ly)/2+8,(512-ly)/2+ly-32)
+		v = random.randrange(4,33)
+		w = random.randrange(1,4)
+		for i in range(v):
+			for j in range(v):
+				for k in range(w):
+					map.set_point(t+i,u+j,61-k,(255,255,255))
+	tree_position = []
+	for s in range(int(sqrt(lx*ly))):
+		x = random.randrange((512-lx)/2,(512-lx)/2+lx)
+		y = random.randrange((512-ly)/2,(512-ly)/2+ly)
+		z = map.get_z(x, y)
+		tree_position.append([x,y,z])
+		
+	for s in tree_position:
+		r = random.randrange(63,128,4)
+		g = random.randrange(31,64,4)
+		b = 0
+		t = random.randrange(9,37,3)
+		for u in range(t+1):
+			map.set_point(s[0],s[1],s[2]-u,(r,g,0))
+		for u in range(t):
+			t1 = u*2+1-u/3*4
+			for v in range(t1):
+				for w in range(t1):
+					l = hypot(s[0]-s[0]-t1/2+v, s[1]-s[1]-t1/2+w)
+					if l <= t1/2:map.set_point(s[0]-t1/2+v,s[1]-t1/2+w,s[2]-t-3+u,(b,r,g))
+	
+	for s in range(512):
+		for t in range(512):
+			z = map.get_z(s,t)
+			if z != 63:
+				map.set_point(s,t,z,(255,255,255))
+	return map
